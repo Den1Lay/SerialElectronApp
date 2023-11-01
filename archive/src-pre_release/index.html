@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Сканер 923</title>
+    <link rel="stylesheet" type="text/css" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <section class="page_wrapper">
+      <div class="reg_row">
+        <button id="refresh_port_btn" type="button" class="btn btn-link">Порт:</button>
+        <div id='select-port-wrapper'></div>
+        <input type="number" value="1200" data-bs-toggle="dropdown" class="baudrate-form form-control form-control-sm" id="port-baudrate" /> 
+        <button id="con_discon_btn" type="button" class="btn btn-sm btn-light">Открыть</button>
+        <ul class="dropdown-menu">
+          <li><a onclick="setBaudrateDropdown(1200)" class="dropdown-item" href="#">1200</a></li>
+          <li><a onclick="setBaudrateDropdown(115200)" class="dropdown-item" href="#">115200</a></li>
+        </ul>
+        <div id="port_status" class="port-status"></div>
+      </div>
+      
+      <div class="reg_row">
+        <input data-bs-toggle="dropdown" class="baudrate-form form-control form-control-sm" id="reg_1_address" placeholder="Регистр" /> 
+        <ul class="dropdown-menu">
+          <li><a onclick="setRegAddress('00AA')" class="dropdown-item" href="#">0x00AA Конфиг</a></li>
+          <li><a onclick="setRegAddress('0100')" class="dropdown-item" href="#">0x0100 Инф о устр</a></li>
+          <li><a onclick="setRegAddress('00AB')" class="dropdown-item" href="#">0x00AB Кол записей</a></li>
+          <li><a onclick="setRegAddress('1200')" class="dropdown-item" href="#">0x1200 Данные</a></li>
+        </ul>
+
+        <input data-bs-toggle="dropdown" type="text" class="baudrate-form form-control form-control-sm" id="reg_1_input" placeholder="Сообщение"/> 
+        <ul class="dropdown-menu">
+          <li><a onclick="setMessageData('F9 10 00 AA 00 04 08 20 39 87 33 11 0F 0A 10')" class="dropdown-item" href="#">F9 10 00 AA 00 04 08 20 39 87 33 11 0F 0A 10</a></li>
+          <li><a onclick="setMessageData('F9 10 00 AA 00 04 08 20 39 87 33 13 0F 0A 10')" class="dropdown-item" href="#">F9 10 00 AA 00 04 08 20 39 87 33 13 0F 0A 10</a></li>
+        </ul>
+
+        <button id="reg_1_write" type="button" class="btn btn-sm btn-light">Запись</button>
+        <button id="reg_1_read" type="button" class="read_btn btn btn-sm btn-light">Чтение</button>
+        
+      </div>
+
+      <!-- <div class="reg_row">
+        <input id="title"/>
+        <button id="btn" type="button">💖</button>
+      </div> -->
+      
+      
+      <div class="reg_row scan">
+        <div class="scan_left">
+          <div class="scan_title">
+            Сканирование
+          </div>
+          <button id="scan_btn" type="button" class="btn btn-sm btn-light">Старт</button>
+          <div id="scan_time_label" class="scan_time">
+            00:00
+          </div>
+        </div>
+
+        <div>
+          <button 
+            id="download_btn" 
+            type="button" 
+            class="btn btn-sm btn-light">
+            Скачать данные
+          </button>
+          <button 
+            id="config_btn" 
+            type="button" 
+            class="btn btn-sm btn-light"
+            data-bs-toggle="modal" 
+            data-bs-target="#exampleModal">
+            Конфигурация
+          </button>
+        </div>
+        
+      </div>
+
+      <div class="reg_row table-header">
+        <div class="th_numb">№</div>
+        <div class="th_serialNumb">Серийный номер счетчика</div>
+        <div class="th_fixTime">Время фиксации показаний</div>
+        <div class="th_payload">Показания счетчика</div>
+        <div class="scroll-mimic"></div>
+      </div>
+      <div class="table-wrapper">
+        <div id="payload_table_wrapper">
+        </div>
+      </div>
+      <div class="reg_row">
+        <div class="footer">
+
+        </div>
+      </div>
+    </section>
+    
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="exampleModalLabel">Конфигурация альтернативного радиоканала</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+          </div>
+          <div class="modal-body modal-body-wrapper">
+            <div class="mb-header">
+              <div class="modk-title">
+                Параметры
+              </div>
+              <div class="modk-value">
+                Новые значения
+              </div>
+              <div class="modk-value">
+                Исходные значения
+              </div>
+            </div>
+
+            <div class="mb-payload">
+              <div class="modk-title">
+                <div class="mb-a">Частота, кГц</div>
+                <div class="mb-a"> Фактор распространения (sf)</div>
+                <div class="mb-a">Полоса частот (bw), кГц</div>
+                <div class="mb-a">Мощность передатчика, дБм</div>
+                <div class="mb-a">Длительность окна приема</div>
+                <div class="mb-a">Время прослушивания, мин</div>
+              </div>
+              <div class="modk-value">
+                <input id="mb_radioFreq_n" type="number" value="10000"  class="mb-a-input form-control-sm"/>
+                <input data-bs-toggle="dropdown" id="mb_sf_n" value="SF7"  class="mb-a-input form-control-sm"/>
+                <ul class="dropdown-menu">
+                  <li><a onclick="setModInputValue('SF7', 'mb_sf_n')" class="dropdown-item" href="#">SF7</a></li>
+                  <li><a onclick="setModInputValue('SF8', 'mb_sf_n')" class="dropdown-item" href="#">SF8</a></li>
+                  <li><a onclick="setModInputValue('SF9', 'mb_sf_n')" class="dropdown-item" href="#">SF9</a></li>
+                  <li><a onclick="setModInputValue('SF10', 'mb_sf_n')" class="dropdown-item" href="#">SF10</a></li>
+                  <li><a onclick="setModInputValue('SF11', 'mb_sf_n')" class="dropdown-item" href="#">SF11</a></li>
+                  <li><a onclick="setModInputValue('SF12', 'mb_sf_n')" class="dropdown-item" href="#">SF12</a></li>
+                </ul>
+                <input data-bs-toggle="dropdown" id="mb_bw_n" value="125"  class="mb-a-input form-control-sm"/>
+                <ul class="dropdown-menu">
+                  <li><a onclick="setModInputValue('125', 'mb_bw_n')" class="dropdown-item" href="#">125</a></li>
+                  <li><a onclick="setModInputValue('250', 'mb_bw_n')" class="dropdown-item" href="#">250</a></li>
+                  <li><a onclick="setModInputValue('500', 'mb_bw_n')" class="dropdown-item" href="#">500</a></li>
+                </ul>
+                <input id="mb_transmitPower_n" value="1"  type="number"  class="mb-a-input form-control-sm"/>
+                <input id="mb_openWindowTime_n" value="1"  type="number"  class="mb-a-input form-control-sm"/>
+                <input id="mb_scanTime_n" value="1"  type="number" class="mb-a-input form-control-sm"/>
+              </div>
+              <div class="modk-value">
+                <div id="mb_radioFreq_o" class="mb-a">10000</div>
+                <div id="mb_sf_o" class="mb-a">SF7</div>
+                <div id="mb_bw_o" class="mb-a">125</div>
+                <div id="mb_transmitPower_o" class="mb-a">1</div>
+                <div id="mb_openWindowTime_o" class="mb-a">1</div>
+                <div id="mb_scanTime_o" class="mb-a">1</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Закрыть</button>
+            <button id="write_new_config_btn" type="button" style="display: none;" class="btn btn-primary">Записать новые значения</button>
+            <button id="write_config_btn" type="button" style="display: none;" class="btn btn-primary">Записать исходные значения</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+  </body>
+  <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.js"></script>
+  <script src='../node_modules/xlsx/xlsx.js'></script>
+  <script src="./js/crc.js"></script>
+  <script src="./js/render.js"></script>
+  <script src="./js/assistance.js"></script>
+</html>
